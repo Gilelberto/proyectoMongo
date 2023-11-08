@@ -1,12 +1,12 @@
 def initDb(mydb):
     #users
     mycol = mydb["users"]
-    newUser = {"name": "Jessanahil", "email":"a358509@guash.mx" }
+    newUser = {"name": "Jessanahil", "email":"a358509@guash.mx","articlesList":[],"commentsList":[]}
     mycol.insert_one(newUser)
 
     #articles
     mycol = mydb["articles"]
-    newArticle = {"title": "Como superar una reprobada de De Lira", "date":"17/11/2023" , "text": "1.-Mime\n2.-Suicidiop." }
+    newArticle = {"title": "Como superar una reprobada de De Lira", "date":"17/11/2023" , "text": "1.-Mime\n2.-Suicidiop.","commentsList":[],"tagsList":[],"categoriesList":[]}
     x = mycol.insert_one(newArticle)
     x.inserted_id
 
@@ -17,10 +17,10 @@ def initDb(mydb):
 
     #tags
     mycol = mydb["tags"]
-    newTag = {"name": "Pedrito Sola", "url":x}
+    newTag = {"name": "Pedrito Sola", "url":x,"articlesList":[]}
     mycol.insert_one(newTag)
 
     #categories
     mycol = mydb["categories"]
-    newCategorie = {"name": "Pedrito Sola", "url":x}
+    newCategorie = {"name": "Pedrito Sola", "url":x,"articlesList":[]}
     mycol.insert_one(newCategorie)

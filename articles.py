@@ -1,80 +1,103 @@
 from bson import ObjectId
 
-def get_and_create_article(articles_collection):
-    title = input("Ingrese el titulo del articulo: ")
-    date = input("Ingrese la fecha del articulo: ")
-    text = input("Ingrese el texto del articulo: ")
+class ArticleManager:
+    def __init__(self, articles_collection, users_collection, tags_collection, categories_collection):
+        self.articles_collection = articles_collection
+        self.users_collection = users_collection
+        self.tags_collection = tags_collection
+        self.categories_collection = categories_collection
 
+    def get_and_create_article(self):
+        print("Lista de Usuarios:")
+        for user in self.users_collection.find():
+            print(f"ID: {user['_id']}, Nombre: {user['name']}, Correo: {user['email']}")
 
-    new_article = {
-        "title": title,
-        "date": date,
-        "text": text,
-        "commentsList":[],
-        "tagsList":[],
-        "categoriesList":[]
-    }
+        usuario_id = input("Ingrese el ID del usuario al que desea asociar el artículo: ")
+        usuario = self.users_collection.find_one({"_id": ObjectId(usuario_id)})
+        nombre_usuario = usuario["name"] if usuario else "Usuario Desconocido"
 
-    result = articles_collection.insert_one(new_article)
-    article_id = result.inserted_id
+        titulo = input("Ingrese el título del artículo: ")
+        fecha = input("Ingrese la fecha del artículo (formato YYYY-MM-DD): ")
+        contenido = input("Ingrese el contenido del artículo: ")
 
-    print("Articulo Creado:", article_id)
-    return article_id
+        # Pedir tags al usuario
+        tags_input = input("Ingrese los nombres de los tags, separados por comas (si no existen se crearán): ")
+        tags_nombres = [x.strip() for x in tags_input.split(",") if x.strip()]
 
+        # Inicializar la lista de ObjectIds de tags para el artículo
+        tags_ids = []
 
-def read_articles(articles_collection):
-    articles = articles_collection.find()
-    return list(articles)
-
-
-
-def update_article(articles_collection, article_id):
-    # Convertir la cadena article_id a ObjectId
-    article_id_object = ObjectId(article_id)
-    existing_article = articles_collection.find_one({"_id": article_id_object})
-
-    if existing_article:
-        print("Articulo encontrado. Puedes proceder con la actualización.")
-
-        while True:
-            print("¿Qué atributo deseas actualizar?")
-            print("1. Título")
-            print("2. Fecha")
-            print("3. Texto")
-            print("4. Salir")
-
-            option = input("Ingrese la opción: ")
-
-            if option == '1':
-                new_title = input("Ingrese el nuevo título del artículo: ")
-                articles_collection.update_one({"_id": article_id_object}, {"$set": {"title": new_title}})
-                print("Título actualizado exitosamente.")
-            elif option == '2':
-                new_date = input("Ingrese la nueva fecha del artículo: ")
-                articles_collection.update_one({"_id": article_id_object}, {"$set": {"date": new_date}})
-                print("Fecha actualizada exitosamente.")
-            elif option == '3':
-                new_text = input("Ingrese el nuevo texto del artículo: ")
-                articles_collection.update_one({"_id": article_id_object}, {"$set": {"text": new_text}})
-                print("Texto actualizado exitosamente.")
-            elif option == '4':
-                print("Saliendo...")
-                break
+        # Verificar si cada tag ya existe, si no, crearlo
+        for nombre_tag in tags_nombres:
+            tag = self.tags_collection.find_one({"name": nombre_tag})
+            if tag:
+                tags_ids.append(tag['_id'])
             else:
-                print("Opción no válida.")
-    else:
-        print("No se encontró un artículo con el ID proporcionado.")
+                nuevo_tag = {"name": nombre_tag, "urls": []}
+                tag_result = self.tags_collection.insert_one(nuevo_tag)
+                tags_ids.append(tag_result.inserted_id)
+                print(f"Tag creado con ID: {tag_result.inserted_id} y nombre {nombre_tag}")
+
+        # Pedir categorías al usuario
+        categorias_input = input("Ingrese los nombres de las categorías, separados por comas (si no existen se crearán): ")
+        categorias_nombres = [x.strip() for x in categorias_input.split(",") if x.strip()]
+
+        # Inicializar la lista de ObjectIds de categorías para el artículo
+        categorias_ids = []
+
+        # Verificar si cada categoría ya existe, si no, crearlo
+        for nombre_categoria in categorias_nombres:
+            categoria = self.categories_collection.find_one({"name": nombre_categoria})
+            if categoria:
+                categorias_ids.append(categoria['_id'])
+            else:
+                nueva_categoria = {"name": nombre_categoria, "urls": []}
+                categoria_result = self.categories_collection.insert_one(nueva_categoria)
+                categorias_ids.append(categoria_result.inserted_id)
+                print(f"Categoría creada con ID: {categoria_result.inserted_id} y nombre {nombre_categoria}")
+
+        # Crear el artículo con los tags y categorías asociadas
+        article_data = {
+            "title": titulo,
+            "date": fecha,
+            "text": contenido,
+            "user_id": usuario_id,
+            "user_name": nombre_usuario,
+            "comments": [],
+            "tags": tags_ids,
+            "categories": categorias_ids
+        }
+        article_result = self.articles_collection.insert_one(article_data)
+
+        # Actualizar la colección de tags y categorías para incluir la URL del nuevo artículo
+        for tag_id in tags_ids:
+            self.tags_collection.update_one({"_id": tag_id}, {"$push": {"urls": article_result.inserted_id}})
+        for categoria_id in categorias_ids:
+            self.categories_collection.update_one({"_id": categoria_id}, {"$push": {"urls": article_result.inserted_id}})
+
+        # Actualizar el usuario con el nuevo artículo
+        self.users_collection.update_one({"_id": ObjectId(usuario_id)}, {"$push": {"articles": article_result.inserted_id}})
+
+        print(f"Artículo creado con ID: {article_result.inserted_id}")
+
+    def read_articles(self):
+        print("Lista de Artículos:")
+        print("\n")
+        for article in self.articles_collection.find():
+            print(f"ID: {article['_id']}, Título: {article['title']}, Fecha: {article['date']}, Usuario: {article['user_name']}")
+            print("Contenido:")
+            print(article['text'])
+            print("Tags:")
+            for tag_id in article['tags']:
+                tag = self.tags_collection.find_one({"_id": tag_id})
+                print(f"  - {tag['name']}")
+            print("Categorías:")
+            for category_id in article['categories']:
+                category = self.categories_collection.find_one({"_id": category_id})
+                print(f"  - {category['name']}")
+            print("Comentarios:")
+            for comment in article['comments']:
+                print(f"  - {comment}")
+            print("\n")
 
 
-
-
-def delete_article(articles_collection,article_id):
-    # Convertir la cadena article_id a ObjectId
-    article_id_object = ObjectId(article_id)
-    existing_article = articles_collection.find_one({"_id": article_id_object})
-
-    if existing_article:
-        articles_collection.delete_one({"_id": article_id_object})
-        print("Articulo eliminado")
-    else:
-        print("Articulo Inexistente")

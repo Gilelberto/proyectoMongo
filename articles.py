@@ -100,4 +100,26 @@ class ArticleManager:
                 print(f"  - {comment}")
             print("\n")
 
+            
+    def delete_article_comment(self,id):
+
+        for article in self.articles_collection.find():
+            print(article["comments"])
+            for comment in article["comments"]:
+                if comment  == id:
+                    commentList = article["comments"]
+                    index = commentList.index(comment)
+                    print(index)
+                    commentList.pop(index)
+    
+                    self.articles_collection.update_one({"_id": article["_id"]}, {"$set": {"comments": commentList}})
+
+
+
+        
+
+
+
+
+
 

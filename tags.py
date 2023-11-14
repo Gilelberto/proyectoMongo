@@ -32,6 +32,11 @@ class TagManager:
         return result.inserted_id
 
 
+    def read_tags(self):
+        for tag in self.tags_collection.find():
+            print(f"ID: {tag['_id']}, Nombre: {tag['name']}, Url: {tag['urls']}")
+
+
 
 
 

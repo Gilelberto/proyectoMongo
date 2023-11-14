@@ -31,6 +31,7 @@ class CategoryManager:
 
         print(f"Categoría creada con ID: {result.inserted_id}")
 
-# Ejemplo de uso:
-# categories_manager = CategoryManager(mydb["categories"], mydb["articles"])
-# categories_manager.create_category()
+    def read_category(self):
+        for category in self.categories_collection.find():
+            print(f"ID: {category['_id']}, Nombre: {category['name']}, Url: {category['urls']}")
+            

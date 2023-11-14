@@ -5,6 +5,7 @@ from users import UserManager
 from articles import ArticleManager
 from tags import TagManager
 from categories import CategoryManager
+from comments import CommentManager
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 
@@ -14,10 +15,11 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-users_manager = UserManager(mydb["users"])
+users_manager = UserManager(mydb["users"],mydb["articles"])
 articles_manager = ArticleManager(mydb["articles"], mydb["users"], mydb["tags"], mydb["categories"])
 tags_manager = TagManager(mydb["tags"], mydb["articles"])
 categories_manager = CategoryManager(mydb["categories"], mydb["articles"])
+comments_manager = CommentManager(mydb["comments"],mydb["users"],mydb["articles"],mydb,ArticleManager)
 
 
 while True:
@@ -53,7 +55,7 @@ while True:
             elif opcion2 == '2':
                 articles_manager.get_and_create_article()
             elif opcion2 == '3':
-                print("Crear comentario")
+                comments_manager.get_and_create_comment()
             elif opcion2 == '4':
                 tags_manager.get_and_create_tag()
             elif opcion2 == '5':
@@ -67,11 +69,11 @@ while True:
             elif opcion2 == '2':
                 articles_manager.read_articles()
             elif opcion2 == '3':
-                print("Leer comentario")
+                comments_manager.read_comments()
             elif opcion2 == '4':
-                print("Leer tag")
+                tags_manager.read_tags()
             elif opcion2 == '5':
-                print("Leer categoría")
+                categories_manager.read_category()
             else:
                 print("Opción no válida en el segundo submenu")
 
@@ -91,11 +93,11 @@ while True:
 
         elif opcion1 == '4':
             if opcion2 == '1':
-                print("eliminar usuario")
+                users_manager.delete_user()
             elif opcion2 == '2':
                 print("eliminar articulo")
             elif opcion2 == '3':
-                print("Eliminar comentario")
+                comments_manager.delete_comment()
             elif opcion2 == '4':
                 print("Eliminar tag")
             elif opcion2 == '5':

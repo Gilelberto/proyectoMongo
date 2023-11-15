@@ -1,9 +1,12 @@
 from bson import ObjectId
 
 class CategoryManager:
-    def __init__(self, categories_collection, articles_collection):
+    def __init__(self, categories_collection, articles_collection,mydb,article_manager = None):
         self.categories_collection = categories_collection
         self.articles_collection = articles_collection
+        self.mydb = mydb
+        self.article_manager = article_manager
+
 
     def create_category(self):
         nombre_categoria = input("Ingrese el nombre de la categoría: ")
@@ -34,4 +37,19 @@ class CategoryManager:
     def read_category(self):
         for category in self.categories_collection.find():
             print(f"ID: {category['_id']}, Nombre: {category['name']}, Url: {category['urls']}")
+
+
+    def delete_categorie(self):
+        print("Lista de Categorias:")
+        for category in self.categories_collection.find():
+            print(f"ID: {category['_id']},Nombre:{category['name']}, Url: {category['urls']}]")
+
+        category_id = input("Ingresa el id de la categoria a eliminar: ")
+
+        # Convertir la cadena user_id a ObjectId
+        category_id_object = ObjectId(category_id)
+        self.article_manager.delete_article_category(self,category_id_object)
+        # Eliminar la categoria
+        result = self.categories_collection.delete_one({"_id": category_id_object})
+        print("Categoria ELiminada Correctamente")
             

@@ -15,11 +15,11 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-users_manager = UserManager(mydb["users"],mydb["articles"])
-articles_manager = ArticleManager(mydb["articles"], mydb["users"], mydb["tags"], mydb["categories"])
-tags_manager = TagManager(mydb["tags"], mydb["articles"])
-categories_manager = CategoryManager(mydb["categories"], mydb["articles"])
-comments_manager = CommentManager(mydb["comments"],mydb["users"],mydb["articles"],mydb,ArticleManager)
+users_manager = UserManager(mydb["users"],mydb["articles"],mydb["tags"],mydb["categories"],mydb["comments"])
+articles_manager = ArticleManager(mydb["articles"], mydb["users"], mydb["tags"], mydb["categories"],mydb["comments"])
+tags_manager = TagManager(mydb["tags"], mydb["articles"],mydb,ArticleManager)
+categories_manager = CategoryManager(mydb["categories"], mydb["articles"],mydb,ArticleManager)
+comments_manager = CommentManager(mydb["comments"],mydb["users"],mydb["articles"],mydb,ArticleManager,UserManager)
 
 
 while True:
@@ -79,7 +79,7 @@ while True:
 
         elif opcion1 == '3':
             if opcion2 == '1':
-                print("actualizar usuario")
+                users_manager.update_users()
             elif opcion2 == '2':
                 print("actualizar articulo")
             elif opcion2 == '3':
@@ -95,12 +95,12 @@ while True:
             if opcion2 == '1':
                 users_manager.delete_user()
             elif opcion2 == '2':
-                print("eliminar articulo")
+                articles_manager.delete_article()
             elif opcion2 == '3':
                 comments_manager.delete_comment()
             elif opcion2 == '4':
-                print("Eliminar tag")
+                tags_manager.delete_tag()
             elif opcion2 == '5':
-                print("Eliminar categoría")
+                categories_manager.delete_categorie()
             else:
                 print("Opción no válida en el segundo submenu")

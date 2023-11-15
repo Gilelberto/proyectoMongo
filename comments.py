@@ -3,16 +3,17 @@ from articles import ArticleManager
 from users import UserManager
 
 class CommentManager:
-    def __init__(self, comments_collection,users_collection,articles_collection,mydb,article_manager = None):
+    def __init__(self, comments_collection,users_collection,articles_collection,mydb,article_manager = None,user_manager = None):
         self.comments_collection = comments_collection
         self.users_collection = users_collection
         self.articles_collection = articles_collection
         self.mydb = mydb
         self.article_manager = article_manager
+        self.user_manager = user_manager
 
     def get_and_create_comment(self):
         users_manager = UserManager(self.users_collection)
-        articles_manager = ArticleManager(self.articles_collection,self.mydb["users"],self.mydb["tags"],self.mydb["categories"])
+        articles_manager = ArticleManager(self.articles_collection,self.mydb["users"],self.mydb["tags"],self.mydb["categories"],self.mydb["comments"])
 
         users_manager.read_users()
         usuario_id= input("Ingrese el ID del usuario que va a comentar: ")
@@ -56,7 +57,10 @@ class CommentManager:
 
         # Convertir la cadena user_id a ObjectId
         comment_id_object = ObjectId(comment_id)
+        #eliminar comentarios en articulos
         self.article_manager.delete_article_comment(self,comment_id_object)
+        #eliminar comentarios en user
+        self.user_manager.delete_user_comment(self,comment_id_object)
         # Eliminar el comentario
         result = self.comments_collection.delete_one({"_id": comment_id_object})
         print("Comentario ELiminado Correctamente")

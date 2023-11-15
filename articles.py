@@ -1,11 +1,12 @@
 from bson import ObjectId
 
 class ArticleManager:
-    def __init__(self, articles_collection, users_collection, tags_collection, categories_collection):
+    def __init__(self, articles_collection, users_collection, tags_collection, categories_collection,comments_collection):
         self.articles_collection = articles_collection
         self.users_collection = users_collection
         self.tags_collection = tags_collection
         self.categories_collection = categories_collection
+        self.comments_collection = comments_collection
 
     def get_and_create_article(self):
         print("Lista de Usuarios:")
@@ -104,7 +105,7 @@ class ArticleManager:
     def delete_article_comment(self,id):
 
         for article in self.articles_collection.find():
-            print(article["comments"])
+            #print(article["comments"])
             for comment in article["comments"]:
                 if comment  == id:
                     commentList = article["comments"]
@@ -115,8 +116,86 @@ class ArticleManager:
                     self.articles_collection.update_one({"_id": article["_id"]}, {"$set": {"comments": commentList}})
 
 
+    def delete_article_category(self,id):
+
+        for article in self.articles_collection.find():
+            #print(article["categories"])
+            for category in article["categories"]:
+                if category  == id:
+                    categoryList = article["categories"]
+                    index = categoryList.index(category)
+                    print(index)
+                    categoryList.pop(index)
+    
+                    self.articles_collection.update_one({"_id": article["_id"]}, {"$set": {"categories": categoryList}})
+
+
+
+    def delete_article_tag(self,id):
+
+        for article in self.articles_collection.find():
+            #print(article["tags"])
+            for tag in article["tags"]:
+                if tag  == id:
+                    tagList = article["tags"]
+                    index = tagList.index(tag)
+                    print(index)
+                    tagList.pop(index)
+    
+                    self.articles_collection.update_one({"_id": article["_id"]}, {"$set": {"tags": tagList}})
+        
+
+    def delete_article(self):
+
+        self.read_articles()
+        article_id = input("Ingresa el Id del articulo a eliminar: ")
+
+        # Convertir la cadena user_id a ObjectId
+        article_id_object = ObjectId(article_id)
+        article = self.articles_collection.find_one({"_id": article_id_object})
+
+        user_id = article["user_id"]
+        user_id_object = ObjectId(user_id)
+
+        #eliminar el articuloid de la lista de articulos en usuario 
+        self.users_collection.update_one({"_id": user_id_object},{"$pull": {"articles": article_id_object}})
+
+        #eliminar el commentid de la lista de comentarios en usuario
+
+        comment_ids = []
+        for comment_id in article["comments"]:
+            comment_ids.append(comment_id)
+            
+        for comment_id in comment_ids:
+            self.users_collection.update_one({"_id": user_id_object}, {"$pull": {"comments": comment_id}})
+
+        # Eliminar el artículo de la lista de URLs de los TAGS asociados
+        for tag_id in article["tags"]:
+            self.tags_collection.update_one({"_id": tag_id},{"$pull": {"urls": article_id_object}})
+
+        # Eliminar el artículo de la lista de URLs de las CATEGORIAS asociadas
+        for category_id in article["categories"]:
+            self.categories_collection.update_one({"_id": category_id},{"$pull": {"urls": article_id_object}})
+
+        #Eliminar los comentarios que esten asociados al article id especificado 
+        self.comments_collection.delete_many({"url": article_id})
+
+
+        #Eliminar el articulo 
+        self.articles_collection.delete_many({"_id": article_id_object})
+
+
 
         
+        
+
+
+        
+
+
+
+
+
 
 
 

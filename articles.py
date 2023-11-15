@@ -101,6 +101,83 @@ class ArticleManager:
                 print(f"  - {comment}")
             print("\n")
 
+
+
+    def update_article(self):
+        print("Lista de Artículos:")
+        for article in self.articles_collection.find():
+            print(f"ID: {article['_id']}, Título: {article['title']}")
+
+        article_id = input("Ingrese el ID del artículo que desea actualizar: ")
+
+        # Verificar si el artículo existe
+        article = self.articles_collection.find_one({"_id": ObjectId(article_id)})
+        if not article:
+            print("Artículo no encontrado.")
+            return
+
+        # Obtener valores actuales del artículo
+        current_title = article['title']
+        current_date = article['date']
+        current_text = article['text']
+
+        # Solicitar al usuario los nuevos valores o dejar los actuales si no se proporcionan
+        new_title = input(f"Ingrese el nuevo título del artículo (actual: {current_title}): ") or current_title
+        new_date = input(f"Ingrese la nueva fecha del artículo (actual: {current_date}): ") or current_date
+        new_text = input(f"Ingrese el nuevo contenido del artículo (actual: {current_text}): ") or current_text
+
+        # Actualizar tags si se proporcionan nuevos valores
+        new_tags_input = input("Ingrese los nombres de los nuevos tags, separados por comas (si no existen se crearán): ")
+        new_tags_names = [x.strip() for x in new_tags_input.split(",") if x.strip()]
+        new_tags_ids = []
+
+        # Verificar si updated_data ya está inicializado
+        if 'updated_data' not in locals():
+            updated_data = {}
+
+        for tag_name in new_tags_names:
+            tag = self.tags_collection.find_one({"name": tag_name})
+            if tag:
+                new_tags_ids.append(tag['_id'])
+            else:
+                new_tag = {"name": tag_name, "urls": [ObjectId(article_id)]}
+                tag_result = self.tags_collection.insert_one(new_tag)
+                new_tags_ids.append(tag_result.inserted_id)
+                print(f"Tag creado con ID: {tag_result.inserted_id} y nombre {tag_name}")
+
+        updated_data["tags"] = new_tags_ids
+
+        # Actualizar categorías si se proporcionan nuevos valores
+        new_categories_input = input("Ingrese los nombres de las nuevas categorías, separadas por comas (si no existen se crearán): ")
+        new_categories_names = [x.strip() for x in new_categories_input.split(",") if x.strip()]
+        new_categories_ids = []
+
+        for category_name in new_categories_names:
+            category = self.categories_collection.find_one({"name": category_name})
+            if category:
+                new_categories_ids.append(category['_id'])
+            else:
+                new_category = {"name": category_name, "urls": [ObjectId(article_id)]}
+                category_result = self.categories_collection.insert_one(new_category)
+                new_categories_ids.append(category_result.inserted_id)
+                print(f"Categoría creada con ID: {category_result.inserted_id} y nombre {category_name}")
+
+        updated_data["categories"] = new_categories_ids
+
+        # Resto del código para actualizar el artículo...
+        # Actualizar el artículo en la colección
+        self.articles_collection.update_one({"_id": ObjectId(article_id)}, {"$set": updated_data})
+
+        # Actualizar las tags y categorías para incluir la nueva URL del artículo
+        for tag_id in new_tags_ids:
+            self.tags_collection.update_one({"_id": tag_id}, {"$push": {"urls": ObjectId(article_id)}})
+
+        for category_id in new_categories_ids:
+            self.categories_collection.update_one({"_id": category_id}, {"$push": {"urls": ObjectId(article_id)}})
+
+        print("Artículo actualizado correctamente.")
+
+
             
     def delete_article_comment(self,id):
 
@@ -165,7 +242,7 @@ class ArticleManager:
         comment_ids = []
         for comment_id in article["comments"]:
             comment_ids.append(comment_id)
-            
+
         for comment_id in comment_ids:
             self.users_collection.update_one({"_id": user_id_object}, {"$pull": {"comments": comment_id}})
 

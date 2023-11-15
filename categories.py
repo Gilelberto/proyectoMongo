@@ -34,6 +34,33 @@ class CategoryManager:
 
         print(f"Categoría creada con ID: {result.inserted_id}")
 
+
+    
+    def update_category(self):
+        # Mostrar todas las categorías disponibles
+        print("Lista de Categorías:")
+        for category in self.categories_collection.find():
+            print(f"ID: {category['_id']}, Nombre: {category['name']}")
+
+        category_id = input("Ingrese el ID de la categoría que desea actualizar: ")
+
+        # Verificar si la categoría existe
+        category = self.categories_collection.find_one({"_id": ObjectId(category_id)})
+        if not category:
+            print("Categoría no encontrada.")
+            return
+
+        # Obtener valores actuales de la categoría
+        current_name = category['name']
+
+        # Solicitar al usuario los nuevos valores o dejar los actuales si no se proporcionan
+        new_name = input(f"Ingrese el nuevo nombre de la categoría (actual: {current_name}): ") or current_name
+
+        # Actualizar la categoría
+        self.categories_collection.update_one({"_id": ObjectId(category_id)}, {"$set": {"name": new_name}})
+
+        print(f"Categoría actualizada con ID: {category_id}")
+
     def read_category(self):
         for category in self.categories_collection.find():
             print(f"ID: {category['_id']}, Nombre: {category['name']}, Url: {category['urls']}")

@@ -33,6 +33,31 @@ class TagManager:
         print(f"Tag creado con ID: {result.inserted_id}")
         return result.inserted_id
 
+    def update_tag(self):
+        # Mostrar todos los tags disponibles
+        print("Lista de Tags:")
+        for tag in self.tags_collection.find():
+            print(f"ID: {tag['_id']}, Nombre: {tag['name']}")
+
+        tag_id = input("Ingrese el ID del tag que desea actualizar: ")
+
+        # Verificar si el tag existe
+        tag = self.tags_collection.find_one({"_id": ObjectId(tag_id)})
+        if not tag:
+            print("Tag no encontrado.")
+            return
+
+        # Obtener valores actuales del tag
+        current_name = tag['name']
+
+        # Solicitar al usuario los nuevos valores o dejar los actuales si no se proporcionan
+        new_name = input(f"Ingrese el nuevo nombre del tag (actual: {current_name}): ") or current_name
+
+        # Actualizar el tag
+        self.tags_collection.update_one({"_id": ObjectId(tag_id)}, {"$set": {"name": new_name}})
+
+        print(f"Tag actualizado con ID: {tag_id}")
+
 
     def read_tags(self):
         for tag in self.tags_collection.find():

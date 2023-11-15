@@ -45,7 +45,26 @@ class CommentManager:
         for comment in self.comments_collection.find():
             print(f"ID: {comment['_id']},Usuario_id:{comment['usuario_id']},Nombre: {comment['name']}, Url: {comment['url']}]")
 
-        
+    def update_comment(self):
+        self.read_comments()
+        comment_id = input("Ingrese el ID del comentario que desea actualizar: ")
+
+        # Verificar si el comentario existe
+        comment = self.comments_collection.find_one({"_id": ObjectId(comment_id)})
+        if not comment:
+            print("Comentario no encontrado.")
+            return
+
+        # Obtener el valor actual del comentario
+        current_name = comment['name']
+
+        # Solicitar al usuario el nuevo valor o dejar el actual si no se proporciona
+        new_name = input(f"Ingrese el nuevo nombre del comentario (actual: {current_name}): ") or current_name
+
+        # Actualizar el comentario en la colección
+        self.comments_collection.update_one({"_id": ObjectId(comment_id)}, {"$set": {"name": new_name}})
+
+        print("Comentario actualizado correctamente.")
 
 
     def delete_comment(self):

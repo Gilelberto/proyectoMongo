@@ -81,13 +81,13 @@ while True:
             if opcion2 == '1':
                 users_manager.update_users()
             elif opcion2 == '2':
-                print("actualizar articulo")
+                articles_manager.update_article()
             elif opcion2 == '3':
-                print("Actualizar comentario")
+                comments_manager.update_comment()
             elif opcion2 == '4':
-                print("Actualizar tag")
+                tags_manager.update_tag()
             elif opcion2 == '5':
-                print("Actualizar categoría")
+                categories_manager.update_category()
             else:
                 print("Opción no válida en el segundo submenu")
 
